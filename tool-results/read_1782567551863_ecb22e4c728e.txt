@@ -1,0 +1,1102 @@
+     1→import React, { useState, useMemo } from 'react';
+     2→import { motion, AnimatePresence } from 'framer-motion';
+     3→import useStore from '../store/useStore';
+     4→import { api } from '../services/api';
+     5→import {
+     6→  categoryLabels,
+     7→  categoryIcons,
+     8→  jarLabels,
+     9→  jarColors,
+    10→  jarIcons,
+    11→  formatCurrency,
+    12→} from '../utils/helpers';
+    13→import {
+    14→  ArrowUpRight, ArrowDownLeft, Save, X, ShoppingCart, Home, TrainFront,
+    15→  Heart, GraduationCap, Gamepad2, Shirt, AlertTriangle, TrendingUp,
+    16→  PiggyBank, Banknote, Laptop, Plus, Minus, CreditCard, Landmark,
+    17→  Calendar, FileText, Coins, Repeat, Wallet, ChevronLeft, AlertCircle,
+    18→  Briefcase, Receipt, Check,
+    19→} from 'lucide-react';
+    20→
+    21→/* ============================================================ */
+    22→/* Static data                                                  */
+    23→/* ============================================================ */
+    24→
+    25→const iconMap = {
+    26→  ShoppingCart, Home, TrainFront, Heart, GraduationCap, Gamepad2, Shirt,
+    27→  AlertTriangle, TrendingUp, PiggyBank, Banknote, Laptop, Plus, Minus,
+    28→  ArrowUpRight, ArrowDownLeft, CreditCard, Landmark, Briefcase, Receipt,
+    29→  Wallet,
+    30→};
+    31→
+    32→const INCOME_CATEGORIES = [
+    33→  'salario',
+    34→  'freelance',
+    35→  'outro_rendimento',
+    36→  'emprestimo_recebido',
+    37→];
+    38→
+    39→const EXPENSE_CATEGORIES = [
+    40→  'alimentacao',
+    41→  'habitacao',
+    42→  'transportes',
+    43→  'saude',
+    44→  'educacao',
+    45→  'lazer',
+    46→  'roupa',
+    47→  'divida',
+    48→  'investimento',
+    49→  'poupanca',
+    50→  'pagamento_divida',
+    51→  'emprestimo_dado',
+    52→  'outro_gasto',
+    53→];
+    54→
+    55→const FREQUENCIES = [
+    56→  { value: 'weekly',   label: 'Semanal' },
+    57→  { value: 'biweekly', label: 'Quinzenal' },
+    58→  { value: 'monthly',  label: 'Mensal' },
+    59→  { value: 'yearly',   label: 'Anual' },
+    60→];
+    61→
+    62→const QUICK_AMOUNTS = [10, 20, 50, 100];
+    63→
+    64→const EMPTY_FORM = {
+    65→  amount: '',
+    66→  category: 'alimentacao',
+    67→  description: '',
+    68→  jar: '',
+    69→  date: new Date().toISOString().split('T')[0],
+    70→  notes: '',
+    71→  isRecurring: false,
+    72→  recurringFrequency: 'monthly',
+    73→};
+    74→
+    75→/* ============================================================ */
+    76→/* Helpers                                                      */
+    77→/* ============================================================ */
+    78→
+    79→const hexToRgba = (hex, alpha = 1) => {
+    80→  if (!hex || typeof hex !== 'string') return `rgba(212,175,55,${alpha})`;
+    81→  let h = hex.replace('#', '').trim();
+    82→  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    83→  if (h.length !== 6) return `rgba(212,175,55,${alpha})`;
+    84→  const r = parseInt(h.substring(0, 2), 16);
+    85→  const g = parseInt(h.substring(2, 4), 16);
+    86→  const b = parseInt(h.substring(4, 6), 16);
+    87→  if ([r, g, b].some(Number.isNaN)) return `rgba(212,175,55,${alpha})`;
+    88→  return `rgba(${r},${g},${b},${alpha})`;
+    89→};
+    90→
+    91→const resolveColor = (color) => {
+    92→  if (!color) return '#D4AF37';
+    93→  if (color.startsWith('#')) return color;
+    94→  // CSS variable fallback to gold
+    95→  return '#D4AF37';
+    96→};
+    97→
+    98→/* ============================================================ */
+    99→/* Layout primitives                                            */
+   100→/* ============================================================ */
+   101→
+   102→const Shell = ({ children }) => (
+   103→  <div
+   104→    style={{
+   105→      width: '100%',
+   106→      maxWidth: 1100,
+   107→      margin: '0 auto',
+   108→      padding: 'clamp(16px, 3vw, 28px)',
+   109→      display: 'flex',
+   110→      flexDirection: 'column',
+   111→      gap: 'clamp(14px, 2.5vw, 20px)',
+   112→      minWidth: 0,
+   113→      boxSizing: 'border-box',
+   114→    }}
+   115→  >
+   116→    {children}
+   117→  </div>
+   118→);
+   119→
+   120→const Card = ({ children, style = {} }) => (
+   121→  <div
+   122→    style={{
+   123→      background: 'var(--card, #1a1a1a)',
+   124→      border: '1px solid var(--border, rgba(255,255,255,0.08))',
+   125→      borderRadius: 16,
+   126→      minWidth: 0,
+   127→      boxSizing: 'border-box',
+   128→      ...style,
+   129→    }}
+   130→  >
+   131→    {children}
+   132→  </div>
+   133→);
+   134→
+   135→const inputBase = {
+   136→  width: '100%',
+   137→  padding: '12px 14px',
+   138→  borderRadius: 10,
+   139→  border: '1px solid var(--border, rgba(255,255,255,0.1))',
+   140→  background: 'rgba(255,255,255,0.04)',
+   141→  color: 'var(--text, #fff)',
+   142→  fontSize: 14,
+   143→  outline: 'none',
+   144→  boxSizing: 'border-box',
+   145→  minWidth: 0,
+   146→  fontFamily: 'inherit',
+   147→};
+   148→
+   149→const FieldLabel = ({ children, icon, optional = false }) => (
+   150→  <label
+   151→    style={{
+   152→      display: 'inline-flex',
+   153→      alignItems: 'center',
+   154→      gap: 6,
+   155→      fontSize: 11,
+   156→      fontWeight: 700,
+   157→      textTransform: 'uppercase',
+   158→      letterSpacing: '0.05em',
+   159→      color: 'var(--text-secondary, #9CA3AF)',
+   160→      marginBottom: 6,
+   161→    }}
+   162→  >
+   163→    {icon}
+   164→    {children}
+   165→    {optional && (
+   166→      <span
+   167→        style={{
+   168→          textTransform: 'none',
+   169→          letterSpacing: 0,
+   170→          fontWeight: 600,
+   171→          fontSize: 10,
+   172→          color: 'var(--text-muted, #6B7280)',
+   173→          marginLeft: 2,
+   174→        }}
+   175→      >
+   176→        (opcional)
+   177→      </span>
+   178→    )}
+   179→  </label>
+   180→);
+   181→
+   182→/* ============================================================ */
+   183→/* Main                                                         */
+   184→/* ============================================================ */
+   185→
+   186→export default function AddTransaction() {
+   187→  const { user, addTransaction, setScreen, updateUser } = useStore();
+   188→
+   189→  const [type, setType] = useState('despesa');
+   190→  const [form, setForm] = useState(EMPTY_FORM);
+   191→  const [saving, setSaving] = useState(false);
+   192→  const [errorMsg, setErrorMsg] = useState('');
+   193→  const [moedasEarned, setMoedasEarned] = useState(null);
+   194→
+   195→  const isIncome = type === 'receita';
+   196→  const toneColor = isIncome ? '#10B981' : '#EF4444';
+   197→  const categories = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+   198→  const amountValue = Number(form.amount || 0);
+   199→  const currency = user?.currency || 'EUR';
+   200→
+   201→  /* ---------- Helpers ---------- */
+   202→  const updateForm = (data) => setForm((prev) => ({ ...prev, ...data }));
+   203→
+   204→  const handleTypeChange = (newType) => {
+   205→    setType(newType);
+   206→    updateForm({
+   207→      category: newType === 'receita' ? 'salario' : 'alimentacao',
+   208→      jar: '',
+   209→    });
+   210→  };
+   211→
+   212→  const getCategoryIcon = (cat, size = 16) => {
+   213→    const iconName = categoryIcons?.[cat];
+   214→    const Icon = iconMap[iconName];
+   215→    return Icon ? <Icon size={size} /> : <Receipt size={size} />;
+   216→  };
+   217→
+   218→  const getJarIcon = (key, size = 15) => {
+   219→    const iconName = jarIcons?.[key];
+   220→    const Icon = iconMap[iconName];
+   221→    return Icon ? <Icon size={size} /> : <Wallet size={size} />;
+   222→  };
+   223→
+   224→  /* ---------- Submit ---------- */
+   225→  const handleSubmit = async (e) => {
+   226→    e.preventDefault();
+   227→
+   228→    if (!form.amount || Number(form.amount) <= 0) {
+   229→      setErrorMsg('Indica um valor válido.');
+   230→      return;
+   231→    }
+   232→    if (!form.description.trim()) {
+   233→      setErrorMsg('Adiciona uma descrição.');
+   234→      return;
+   235→    }
+   236→
+   237→    setSaving(true);
+   238→    setErrorMsg('');
+   239→
+   240→    try {
+   241→      const res = await api.createTransaction({
+   242→        ...form,
+   243→        type,
+   244→        amount: Number(form.amount),
+   245→        jar: form.jar || null,
+   246→        isRecurring: form.isRecurring || undefined,
+   247→        recurringFrequency: form.isRecurring ? form.recurringFrequency : undefined,
+   248→      });
+   249→
+   250→      addTransaction(res?.data?.transaction);
+   251→      window.dispatchEvent(new CustomEvent('poupt-refresh-dashboard'));
+   252→
+   253→      try {
+   254→        const moedasRes = await api.earnMoedas('add_transaction', 5);
+   255→        updateUser({ poupMoedas: moedasRes?.data?.balance });
+   256→        setMoedasEarned(moedasRes?.data?.earned || 5);
+   257→        setTimeout(() => {
+   258→          setMoedasEarned(null);
+   259→          setScreen('dashboard');
+   260→        }, 1200);
+   261→      } catch {
+   262→        setScreen('dashboard');
+   263→      }
+   264→    } catch (err) {
+   265→      setErrorMsg(err?.message || 'Erro ao guardar transação.');
+   266→    } finally {
+   267→      setSaving(false);
+   268→    }
+   269→  };
+   270→
+   271→  /* ---------- Jar entries ---------- */
+   272→  const jarEntries = useMemo(
+   273→    () => (jarLabels ? Object.entries(jarLabels) : []),
+   274→    []
+   275→  );
+   276→
+   277→  /* ============================================================ */
+   278→  return (
+   279→    <Shell>
+   280→      {/* Back */}
+   281→      <button
+   282→        type="button"
+   283→        onClick={() => setScreen('dashboard')}
+   284→        style={{
+   285→          display: 'inline-flex',
+   286→          alignItems: 'center',
+   287→          gap: 6,
+   288→          background: 'transparent',
+   289→          border: 'none',
+   290→          color: 'var(--text-secondary, #9CA3AF)',
+   291→          cursor: 'pointer',
+   292→          padding: 8,
+   293→          margin: '-8px 0 0 -8px',
+   294→          fontSize: 14,
+   295→          fontWeight: 600,
+   296→          minHeight: 44,
+   297→          alignSelf: 'flex-start',
+   298→        }}
+   299→      >
+   300→        <ChevronLeft size={18} /> Voltar
+   301→      </button>
+   302→
+   303→      {/* ============== HEADER ============== */}
+   304→      <Card style={{ padding: 'clamp(16px, 3vw, 22px)' }}>
+   305→        <div
+   306→          style={{
+   307→            display: 'flex',
+   308→            alignItems: 'center',
+   309→            gap: 14,
+   310→            flexWrap: 'wrap',
+   311→            minWidth: 0,
+   312→          }}
+   313→        >
+   314→          <div
+   315→            style={{
+   316→              width: 48, height: 48,
+   317→              borderRadius: 12,
+   318→              background: hexToRgba(toneColor, 0.18),
+   319→              color: toneColor,
+   320→              display: 'flex',
+   321→              alignItems: 'center',
+   322→              justifyContent: 'center',
+   323→              flexShrink: 0,
+   324→              transition: 'all 0.2s ease',
+   325→            }}
+   326→          >
+   327→            {isIncome ? <ArrowUpRight size={24} /> : <ArrowDownLeft size={24} />}
+   328→          </div>
+   329→
+   330→          <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+   331→            <p
+   332→              style={{
+   333→                margin: 0,
+   334→                fontSize: 11,
+   335→                fontWeight: 800,
+   336→                textTransform: 'uppercase',
+   337→                letterSpacing: '0.08em',
+   338→                color: 'var(--text-muted, #6B7280)',
+   339→              }}
+   340→            >
+   341→              Nova transação
+   342→            </p>
+   343→            <h1
+   344→              style={{
+   345→                margin: '4px 0 0',
+   346→                fontSize: 'clamp(18px, 4vw, 22px)',
+   347→                fontWeight: 800,
+   348→                color: 'var(--text, #fff)',
+   349→                letterSpacing: '-0.01em',
+   350→                lineHeight: 1.2,
+   351→              }}
+   352→            >
+   353→              {isIncome ? 'Adicionar receita' : 'Adicionar despesa'}
+   354→            </h1>
+   355→            <p
+   356→              style={{
+   357→                margin: '4px 0 0',
+   358→                fontSize: 13,
+   359→                color: 'var(--text-secondary, #9CA3AF)',
+   360→                lineHeight: 1.4,
+   361→              }}
+   362→            >
+   363→              Regista movimentos para manter o orçamento atualizado.
+   364→            </p>
+   365→          </div>
+   366→        </div>
+   367→      </Card>
+   368→
+   369→      {/* ============== MOEDAS TOAST ============== */}
+   370→      <AnimatePresence>
+   371→        {moedasEarned && (
+   372→          <motion.div
+   373→            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+   374→            animate={{ opacity: 1, scale: 1, y: 0 }}
+   375→            exit={{ opacity: 0, scale: 0.9 }}
+   376→            transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+   377→            style={{
+   378→              padding: 'clamp(14px, 3vw, 18px)',
+   379→              borderRadius: 14,
+   380→              background:
+   381→                'linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.08))',
+   382→              border: '1px solid rgba(212,175,55,0.4)',
+   383→              display: 'flex',
+   384→              alignItems: 'center',
+   385→              justifyContent: 'center',
+   386→              gap: 10,
+   387→              flexWrap: 'wrap',
+   388→            }}
+   389→          >
+   390→            <motion.div
+   391→              animate={{ rotate: [0, -10, 10, -10, 0] }}
+   392→              transition={{ duration: 0.6 }}
+   393→              style={{
+   394→                width: 36, height: 36,
+   395→                borderRadius: '50%',
+   396→                background: 'rgba(212,175,55,0.25)',
+   397→                color: '#D4AF37',
+   398→                display: 'flex',
+   399→                alignItems: 'center',
+   400→                justifyContent: 'center',
+   401→                flexShrink: 0,
+   402→              }}
+   403→            >
+   404→              <Coins size={18} />
+   405→            </motion.div>
+   406→            <p
+   407→              style={{
+   408→                margin: 0,
+   409→                fontSize: 14,
+   410→                fontWeight: 800,
+   411→                color: '#D4AF37',
+   412→              }}
+   413→            >
+   414→              +{moedasEarned} PoupMoedas ganhos!
+   415→            </p>
+   416→          </motion.div>
+   417→        )}
+   418→      </AnimatePresence>
+   419→
+   420→      {/* ============== ERROR ============== */}
+   421→      <AnimatePresence>
+   422→        {errorMsg && (
+   423→          <motion.div
+   424→            initial={{ opacity: 0, y: -6 }}
+   425→            animate={{ opacity: 1, y: 0 }}
+   426→            exit={{ opacity: 0, y: -6 }}
+   427→            onClick={() => setErrorMsg('')}
+   428→            style={{
+   429→              padding: '12px 16px',
+   430→              background: 'rgba(239,68,68,0.12)',
+   431→              border: '1px solid rgba(239,68,68,0.3)',
+   432→              borderRadius: 12,
+   433→              color: '#FCA5A5',
+   434→              fontSize: 13,
+   435→              fontWeight: 600,
+   436→              display: 'flex',
+   437→              alignItems: 'center',
+   438→              gap: 10,
+   439→              cursor: 'pointer',
+   440→            }}
+   441→          >
+   442→            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+   443→            <span style={{ flex: 1, minWidth: 0 }}>{errorMsg}</span>
+   444→            <X size={14} style={{ flexShrink: 0, opacity: 0.7 }} />
+   445→          </motion.div>
+   446→        )}
+   447→      </AnimatePresence>
+   448→
+   449→      {/* ============== FORM ============== */}
+   450→      <form
+   451→        onSubmit={handleSubmit}
+   452→        style={{
+   453→          display: 'flex',
+   454→          flexDirection: 'column',
+   455→          gap: 'clamp(14px, 2.5vw, 20px)',
+   456→        }}
+   457→      >
+   458→        {/* ====== TYPE + AMOUNT ====== */}
+   459→        <Card style={{ padding: 'clamp(18px, 3vw, 24px)' }}>
+   460→          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+   461→            {/* Type toggle */}
+   462→            <div
+   463→              style={{
+   464→                display: 'grid',
+   465→                gridTemplateColumns: '1fr 1fr',
+   466→                gap: 10,
+   467→              }}
+   468→            >
+   469→              <TypeButton
+   470→                active={!isIncome}
+   471→                icon={<ArrowDownLeft size={18} />}
+   472→                label="Despesa"
+   473→                color="#EF4444"
+   474→                onClick={() => handleTypeChange('despesa')}
+   475→              />
+   476→              <TypeButton
+   477→                active={isIncome}
+   478→                icon={<ArrowUpRight size={18} />}
+   479→                label="Receita"
+   480→                color="#10B981"
+   481→                onClick={() => handleTypeChange('receita')}
+   482→              />
+   483→            </div>
+   484→
+   485→            {/* Amount display */}
+   486→            <div
+   487→              style={{
+   488→                padding: 'clamp(18px, 3.5vw, 24px) clamp(14px, 3vw, 20px)',
+   489→                borderRadius: 18,
+   490→                background: hexToRgba(toneColor, 0.06),
+   491→                border: `1px solid ${hexToRgba(toneColor, 0.25)}`,
+   492→                textAlign: 'center',
+   493→                transition: 'all 0.2s ease',
+   494→              }}
+   495→            >
+   496→              <p
+   497→                style={{
+   498→                  margin: 0,
+   499→                  fontSize: 11,
+   500→                  fontWeight: 800,
+   501→                  textTransform: 'uppercase',
+   502→                  letterSpacing: '0.08em',
+   503→                  color: 'var(--text-muted, #6B7280)',
+   504→                }}
+   505→              >
+   506→                Valor
+   507→              </p>
+   508→
+   509→              <div
+   510→                style={{
+   511→                  marginTop: 8,
+   512→                  display: 'flex',
+   513→                  alignItems: 'center',
+   514→                  justifyContent: 'center',
+   515→                  gap: 6,
+   516→                  flexWrap: 'wrap',
+   517→                }}
+   518→              >
+   519→                <span
+   520→                  style={{
+   521→                    fontSize: 'clamp(14px, 3vw, 18px)',
+   522→                    fontWeight: 800,
+   523→                    color: toneColor,
+   524→                  }}
+   525→                >
+   526→                  {currency}
+   527→                </span>
+   528→                <input
+   529→                  type="number"
+   530→                  value={form.amount}
+   531→                  onChange={(e) => updateForm({ amount: e.target.value })}
+   532→                  placeholder="0.00"
+   533→                  required
+   534→                  min="0.01"
+   535→                  step="0.01"
+   536→                  inputMode="decimal"
+   537→                  style={{
+   538→                    width: '100%',
+   539→                    maxWidth: 240,
+   540→                    background: 'transparent',
+   541→                    border: 'none',
+   542→                    textAlign: 'center',
+   543→                    fontSize: 'clamp(32px, 8vw, 48px)',
+   544→                    fontWeight: 900,
+   545→                    letterSpacing: '-0.04em',
+   546→                    outline: 'none',
+   547→                    color: toneColor,
+   548→                    fontVariantNumeric: 'tabular-nums',
+   549→                    minWidth: 0,
+   550→                    padding: '4px 0',
+   551→                  }}
+   552→                />
+   553→              </div>
+   554→
+   555→              {amountValue > 0 && (
+   556→                <p
+   557→                  style={{
+   558→                    margin: '6px 0 0',
+   559→                    fontSize: 12,
+   560→                    fontWeight: 700,
+   561→                    color: 'var(--text-muted, #6B7280)',
+   562→                    fontVariantNumeric: 'tabular-nums',
+   563→                  }}
+   564→                >
+   565→                  {formatCurrency(amountValue, currency)}
+   566→                </p>
+   567→              )}
+   568→
+   569→              {/* Quick amounts */}
+   570→              <div
+   571→                style={{
+   572→                  marginTop: 14,
+   573→                  display: 'flex',
+   574→                  gap: 6,
+   575→                  flexWrap: 'wrap',
+   576→                  justifyContent: 'center',
+   577→                }}
+   578→              >
+   579→                {QUICK_AMOUNTS.map((amt) => {
+   580→                  const active = form.amount === String(amt);
+   581→                  return (
+   582→                    <button
+   583→                      key={amt}
+   584→                      type="button"
+   585→                      onClick={() => updateForm({ amount: String(amt) })}
+   586→                      style={{
+   587→                        flex: '1 1 60px',
+   588→                        maxWidth: 100,
+   589→                        minHeight: 38,
+   590→                        padding: '6px 12px',
+   591→                        borderRadius: 8,
+   592→                        background: active
+   593→                          ? hexToRgba(toneColor, 0.2)
+   594→                          : 'rgba(255,255,255,0.04)',
+   595→                        color: active ? toneColor : 'var(--text-secondary, #9CA3AF)',
+   596→                        border: `1px solid ${active ? hexToRgba(toneColor, 0.5) : 'var(--border, rgba(255,255,255,0.08))'}`,
+   597→                        fontSize: 12,
+   598→                        fontWeight: 700,
+   599→                        cursor: 'pointer',
+   600→                        transition: 'all 0.12s ease',
+   601→                      }}
+   602→                    >
+   603→                      {currency === 'EUR' ? '€' : ''}{amt}
+   604→                    </button>
+   605→                  );
+   606→                })}
+   607→              </div>
+   608→            </div>
+   609→          </div>
+   610→        </Card>
+   611→
+   612→        {/* ====== DESCRIPTION + CATEGORY ====== */}
+   613→        <Card style={{ padding: 'clamp(18px, 3vw, 24px)' }}>
+   614→          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+   615→            <div>
+   616→              <FieldLabel icon={<FileText size={12} />}>Descrição</FieldLabel>
+   617→              <input
+   618→                type="text"
+   619→                value={form.description}
+   620→                onChange={(e) => updateForm({ description: e.target.value })}
+   621→                placeholder={isIncome ? 'Ex: Salário mensal' : 'Ex: Compras no supermercado'}
+   622→                required
+   623→                style={inputBase}
+   624→              />
+   625→            </div>
+   626→
+   627→            <div>
+   628→              <FieldLabel>Categoria</FieldLabel>
+   629→              <div
+   630→                style={{
+   631→                  display: 'grid',
+   632→                  gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+   633→                  gap: 8,
+   634→                }}
+   635→              >
+   636→                {categories.map((cat) => {
+   637→                  const active = form.category === cat;
+   638→                  return (
+   639→                    <OptionButton
+   640→                      key={cat}
+   641→                      active={active}
+   642→                      icon={getCategoryIcon(cat, 16)}
+   643→                      label={categoryLabels?.[cat] || cat}
+   644→                      color={toneColor}
+   645→                      onClick={() => updateForm({ category: cat })}
+   646→                    />
+   647→                  );
+   648→                })}
+   649→              </div>
+   650→            </div>
+   651→          </div>
+   652→        </Card>
+   653→
+   654→        {/* ====== JAR (optional) ====== */}
+   655→        {jarEntries.length > 0 && (
+   656→          <Card style={{ padding: 'clamp(18px, 3vw, 24px)' }}>
+   657→            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+   658→              <div
+   659→                style={{
+   660→                  display: 'flex',
+   661→                  alignItems: 'flex-start',
+   662→                  justifyContent: 'space-between',
+   663→                  gap: 10,
+   664→                  flexWrap: 'wrap',
+   665→                }}
+   666→              >
+   667→                <div style={{ minWidth: 0, flex: '1 1 200px' }}>
+   668→                  <h3
+   669→                    style={{
+   670→                      margin: 0,
+   671→                      fontSize: 14,
+   672→                      fontWeight: 800,
+   673→                      color: 'var(--text, #fff)',
+   674→                      display: 'inline-flex',
+   675→                      alignItems: 'center',
+   676→                      gap: 6,
+   677→                    }}
+   678→                  >
+   679→                    <Wallet size={14} /> Frasco
+   680→                  </h3>
+   681→                  <p
+   682→                    style={{
+   683→                      margin: '4px 0 0',
+   684→                      fontSize: 12,
+   685→                      color: 'var(--text-secondary, #9CA3AF)',
+   686→                      lineHeight: 1.5,
+   687→                    }}
+   688→                  >
+   689→                    Opcional. Associa esta transação a uma área do orçamento.
+   690→                  </p>
+   691→                </div>
+   692→                {form.jar && (
+   693→                  <button
+   694→                    type="button"
+   695→                    onClick={() => updateForm({ jar: '' })}
+   696→                    style={{
+   697→                      background: 'transparent',
+   698→                      border: '1px solid var(--border, rgba(255,255,255,0.1))',
+   699→                      color: 'var(--text-secondary, #9CA3AF)',
+   700→                      borderRadius: 8,
+   701→                      padding: '6px 10px',
+   702→                      fontSize: 11,
+   703→                      fontWeight: 700,
+   704→                      cursor: 'pointer',
+   705→                      minHeight: 32,
+   706→                      display: 'inline-flex',
+   707→                      alignItems: 'center',
+   708→                      gap: 4,
+   709→                      flexShrink: 0,
+   710→                    }}
+   711→                  >
+   712→                    <X size={12} /> Limpar
+   713→                  </button>
+   714→                )}
+   715→              </div>
+   716→
+   717→              <div
+   718→                style={{
+   719→                  display: 'grid',
+   720→                  gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+   721→                  gap: 8,
+   722→                }}
+   723→              >
+   724→                {jarEntries.map(([key, label]) => {
+   725→                  const active = form.jar === key;
+   726→                  const color = resolveColor(jarColors?.[key]);
+   727→                  return (
+   728→                    <OptionButton
+   729→                      key={key}
+   730→                      active={active}
+   731→                      icon={getJarIcon(key, 15)}
+   732→                      label={String(label).split(' ')[0]}
+   733→                      color={color}
+   734→                      onClick={() => updateForm({ jar: active ? '' : key })}
+   735→                    />
+   736→                  );
+   737→                })}
+   738→              </div>
+   739→            </div>
+   740→          </Card>
+   741→        )}
+   742→
+   743→        {/* ====== DATE + NOTES + RECURRING ====== */}
+   744→        <Card style={{ padding: 'clamp(18px, 3vw, 24px)' }}>
+   745→          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+   746→            <div
+   747→              style={{
+   748→                display: 'grid',
+   749→                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+   750→                gap: 12,
+   751→              }}
+   752→            >
+   753→              <div>
+   754→                <FieldLabel icon={<Calendar size={12} />}>Data</FieldLabel>
+   755→                <input
+   756→                  type="date"
+   757→                  value={form.date}
+   758→                  onChange={(e) => updateForm({ date: e.target.value })}
+   759→                  style={inputBase}
+   760→                />
+   761→              </div>
+   762→            </div>
+   763→
+   764→            <div>
+   765→              <FieldLabel icon={<FileText size={12} />} optional>
+   766→                Notas
+   767→              </FieldLabel>
+   768→              <textarea
+   769→                value={form.notes}
+   770→                onChange={(e) => updateForm({ notes: e.target.value })}
+   771→                placeholder="Detalhes úteis sobre este movimento…"
+   772→                rows={3}
+   773→                style={{
+   774→                  ...inputBase,
+   775→                  resize: 'vertical',
+   776→                  minHeight: 80,
+   777→                }}
+   778→              />
+   779→            </div>
+   780→
+   781→            {/* Recurring toggle */}
+   782→            <div
+   783→              style={{
+   784→                padding: 'clamp(12px, 2.5vw, 16px)',
+   785→                borderRadius: 12,
+   786→                background: form.isRecurring
+   787→                  ? 'rgba(212,175,55,0.08)'
+   788→                  : 'rgba(255,255,255,0.03)',
+   789→                border: `1px solid ${form.isRecurring ? 'rgba(212,175,55,0.3)' : 'var(--border, rgba(255,255,255,0.08))'}`,
+   790→                transition: 'all 0.2s ease',
+   791→              }}
+   792→            >
+   793→              <div
+   794→                style={{
+   795→                  display: 'flex',
+   796→                  alignItems: 'center',
+   797→                  justifyContent: 'space-between',
+   798→                  gap: 12,
+   799→                  flexWrap: 'wrap',
+   800→                }}
+   801→              >
+   802→                <div
+   803→                  style={{
+   804→                    display: 'flex',
+   805→                    alignItems: 'center',
+   806→                    gap: 12,
+   807→                    flex: '1 1 200px',
+   808→                    minWidth: 0,
+   809→                  }}
+   810→                >
+   811→                  <div
+   812→                    style={{
+   813→                      width: 40, height: 40,
+   814→                      borderRadius: 12,
+   815→                      background: 'rgba(212,175,55,0.18)',
+   816→                      color: '#D4AF37',
+   817→                      display: 'flex',
+   818→                      alignItems: 'center',
+   819→                      justifyContent: 'center',
+   820→                      flexShrink: 0,
+   821→                    }}
+   822→                  >
+   823→                    <Repeat size={18} />
+   824→                  </div>
+   825→                  <div style={{ minWidth: 0, flex: 1 }}>
+   826→                    <p
+   827→                      style={{
+   828→                        margin: 0,
+   829→                        fontSize: 13,
+   830→                        fontWeight: 800,
+   831→                        color: 'var(--text, #fff)',
+   832→                      }}
+   833→                    >
+   834→                      Transação recorrente
+   835→                    </p>
+   836→                    <p
+   837→                      style={{
+   838→                        margin: '2px 0 0',
+   839→                        fontSize: 11,
+   840→                        color: 'var(--text-secondary, #9CA3AF)',
+   841→                        lineHeight: 1.4,
+   842→                      }}
+   843→                    >
+   844→                      Útil para salários, rendas ou subscrições.
+   845→                    </p>
+   846→                  </div>
+   847→                </div>
+   848→
+   849→                <button
+   850→                  type="button"
+   851→                  onClick={() => updateForm({ isRecurring: !form.isRecurring })}
+   852→                  aria-label="Alternar recorrência"
+   853→                  style={{
+   854→                    position: 'relative',
+   855→                    width: 52,
+   856→                    height: 30,
+   857→                    borderRadius: 999,
+   858→                    background: form.isRecurring
+   859→                      ? 'linear-gradient(135deg, #D4AF37, #B8941F)'
+   860→                      : 'rgba(255,255,255,0.08)',
+   861→                    border: 'none',
+   862→                    cursor: 'pointer',
+   863→                    transition: 'all 0.2s ease',
+   864→                    flexShrink: 0,
+   865→                    padding: 0,
+   866→                  }}
+   867→                >
+   868→                  <motion.span
+   869→                    animate={{ left: form.isRecurring ? 25 : 3 }}
+   870→                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+   871→                    style={{
+   872→                      position: 'absolute',
+   873→                      top: 3,
+   874→                      width: 24,
+   875→                      height: 24,
+   876→                      borderRadius: '50%',
+   877→                      background: '#fff',
+   878→                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+   879→                    }}
+   880→                  />
+   881→                </button>
+   882→              </div>
+   883→
+   884→              <AnimatePresence>
+   885→                {form.isRecurring && (
+   886→                  <motion.div
+   887→                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+   888→                    animate={{ opacity: 1, height: 'auto', marginTop: 14 }}
+   889→                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+   890→                    style={{ overflow: 'hidden' }}
+   891→                  >
+   892→                    <FieldLabel>Frequência</FieldLabel>
+   893→                    <div
+   894→                      style={{
+   895→                        display: 'grid',
+   896→                        gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+   897→                        gap: 8,
+   898→                      }}
+   899→                    >
+   900→                      {FREQUENCIES.map((freq) => {
+   901→                        const active = form.recurringFrequency === freq.value;
+   902→                        return (
+   903→                          <button
+   904→                            key={freq.value}
+   905→                            type="button"
+   906→                            onClick={() => updateForm({ recurringFrequency: freq.value })}
+   907→                            style={{
+   908→                              minHeight: 42,
+   909→                              padding: '8px 12px',
+   910→                              borderRadius: 10,
+   911→                              background: active
+   912→                                ? 'rgba(212,175,55,0.15)'
+   913→                                : 'rgba(255,255,255,0.04)',
+   914→                              color: active ? '#D4AF37' : 'var(--text-secondary, #9CA3AF)',
+   915→                              border: `1px solid ${active ? 'rgba(212,175,55,0.5)' : 'var(--border, rgba(255,255,255,0.08))'}`,
+   916→                              fontSize: 12,
+   917→                              fontWeight: 700,
+   918→                              cursor: 'pointer',
+   919→                              transition: 'all 0.12s ease',
+   920→                              minWidth: 0,
+   921→                              whiteSpace: 'nowrap',
+   922→                              overflow: 'hidden',
+   923→                              textOverflow: 'ellipsis',
+   924→                            }}
+   925→                          >
+   926→                            {freq.label}
+   927→                          </button>
+   928→                        );
+   929→                      })}
+   930→                    </div>
+   931→                  </motion.div>
+   932→                )}
+   933→              </AnimatePresence>
+   934→            </div>
+   935→          </div>
+   936→        </Card>
+   937→
+   938→        {/* ====== ACTIONS ====== */}
+   939→        <div
+   940→          style={{
+   941→            display: 'flex',
+   942→            gap: 10,
+   943→            flexWrap: 'wrap',
+   944→          }}
+   945→        >
+   946→          <button
+   947→            type="button"
+   948→            onClick={() => setScreen('dashboard')}
+   949→            style={{
+   950→              flex: '1 1 120px',
+   951→              minHeight: 52,
+   952→              padding: '12px 16px',
+   953→              borderRadius: 12,
+   954→              background: 'transparent',
+   955→              color: 'var(--text, #fff)',
+   956→              border: '1px solid var(--border, rgba(255,255,255,0.1))',
+   957→              fontSize: 14,
+   958→              fontWeight: 700,
+   959→              cursor: 'pointer',
+   960→              display: 'inline-flex',
+   961→              alignItems: 'center',
+   962→              justifyContent: 'center',
+   963→              gap: 6,
+   964→            }}
+   965→          >
+   966→            <X size={16} /> Cancelar
+   967→          </button>
+   968→          <button
+   969→            type="submit"
+   970→            disabled={saving}
+   971→            style={{
+   972→              flex: '2 1 200px',
+   973→              minHeight: 52,
+   974→              padding: '12px 16px',
+   975→              borderRadius: 12,
+   976→              background: saving
+   977→                ? 'rgba(212,175,55,0.5)'
+   978→                : 'linear-gradient(135deg, #D4AF37, #B8941F)',
+   979→              color: '#0B0B0B',
+   980→              border: 'none',
+   981→              fontSize: 14,
+   982→              fontWeight: 800,
+   983→              cursor: saving ? 'wait' : 'pointer',
+   984→              opacity: saving ? 0.7 : 1,
+   985→              display: 'inline-flex',
+   986→              alignItems: 'center',
+   987→              justifyContent: 'center',
+   988→              gap: 6,
+   989→              boxShadow: saving ? 'none' : '0 8px 20px rgba(212,175,55,0.25)',
+   990→              transition: 'all 0.15s ease',
+   991→            }}
+   992→          >
+   993→            <Save size={16} /> {saving ? 'A guardar…' : 'Guardar transação'}
+   994→          </button>
+   995→        </div>
+   996→      </form>
+   997→    </Shell>
+   998→  );
+   999→}
+  1000→
+  1001→/* ============================================================ */
+  1002→/* Sub-components                                               */
+  1003→/* ============================================================ */
+  1004→
+  1005→function TypeButton({ active, icon, label, color, onClick }) {
+  1006→  return (
+  1007→    <button
+  1008→      type="button"
+  1009→      onClick={onClick}
+  1010→      style={{
+  1011→        minHeight: 56,
+  1012→        padding: '12px 16px',
+  1013→        borderRadius: 12,
+  1014→        background: active ? hexToRgba(color, 0.15) : 'rgba(255,255,255,0.03)',
+  1015→        color: active ? color : 'var(--text-secondary, #9CA3AF)',
+  1016→        border: `1px solid ${active ? hexToRgba(color, 0.5) : 'var(--border, rgba(255,255,255,0.08))'}`,
+  1017→        fontSize: 14,
+  1018→        fontWeight: 800,
+  1019→        cursor: 'pointer',
+  1020→        display: 'inline-flex',
+  1021→        alignItems: 'center',
+  1022→        justifyContent: 'center',
+  1023→        gap: 8,
+  1024→        transition: 'all 0.15s ease',
+  1025→        minWidth: 0,
+  1026→      }}
+  1027→    >
+  1028→      {icon}
+  1029→      <span
+  1030→        style={{
+  1031→          overflow: 'hidden',
+  1032→          textOverflow: 'ellipsis',
+  1033→          whiteSpace: 'nowrap',
+  1034→        }}
+  1035→      >
+  1036→        {label}
+  1037→      </span>
+  1038→    </button>
+  1039→  );
+  1040→}
+  1041→
+  1042→function OptionButton({ active, icon, label, color, onClick }) {
+  1043→  return (
+  1044→    <button
+  1045→      type="button"
+  1046→      onClick={onClick}
+  1047→      style={{
+  1048→        minHeight: 72,
+  1049→        padding: '10px 8px',
+  1050→        borderRadius: 12,
+  1051→        background: active ? hexToRgba(color, 0.15) : 'rgba(255,255,255,0.04)',
+  1052→        color: active ? color : 'var(--text-secondary, #9CA3AF)',
+  1053→        border: `1px solid ${active ? hexToRgba(color, 0.5) : 'var(--border, rgba(255,255,255,0.08))'}`,
+  1054→        fontSize: 11,
+  1055→        fontWeight: 700,
+  1056→        cursor: 'pointer',
+  1057→        display: 'flex',
+  1058→        flexDirection: 'column',
+  1059→        alignItems: 'center',
+  1060→        justifyContent: 'center',
+  1061→        gap: 6,
+  1062→        transition: 'all 0.12s ease',
+  1063→        minWidth: 0,
+  1064→        position: 'relative',
+  1065→      }}
+  1066→    >
+  1067→      {active && (
+  1068→        <span
+  1069→          style={{
+  1070→            position: 'absolute',
+  1071→            top: 4,
+  1072→            right: 4,
+  1073→            width: 16,
+  1074→            height: 16,
+  1075→            borderRadius: '50%',
+  1076→            background: color,
+  1077→            color: '#0B0B0B',
+  1078→            display: 'flex',
+  1079→            alignItems: 'center',
+  1080→            justifyContent: 'center',
+  1081→            flexShrink: 0,
+  1082→          }}
+  1083→        >
+  1084→          <Check size={10} strokeWidth={3} />
+  1085→        </span>
+  1086→      )}
+  1087→      <span style={{ flexShrink: 0 }}>{icon}</span>
+  1088→      <span
+  1089→        style={{
+  1090→          width: '100%',
+  1091→          textAlign: 'center',
+  1092→          overflow: 'hidden',
+  1093→          textOverflow: 'ellipsis',
+  1094→          whiteSpace: 'nowrap',
+  1095→        }}
+  1096→      >
+  1097→        {label}
+  1098→      </span>
+  1099→    </button>
+  1100→  );
+  1101→}
+  1102→
