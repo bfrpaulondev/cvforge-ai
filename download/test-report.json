@@ -1,11 +1,11 @@
 {
-  "test_run": "2026-06-27T14:28:06.883102",
-  "test_user_email": "maria.silva.e2e.1782570442@example.com",
+  "test_run": "2026-06-27T14:55:54.313559",
+  "test_user_email": "maria.silva.e2e.1782572113@example.com",
   "summary": {
     "total": 49,
-    "success": 42,
-    "failed": 7,
-    "success_pct": 85.7
+    "success": 45,
+    "failed": 4,
+    "success_pct": 91.8
   },
   "results": [
     {
@@ -13,7 +13,7 @@
       "test": "Registrar nova conta",
       "success": true,
       "http_status": 201,
-      "detail": "Token recebido. User ID: 6a3fddcb1ae2dc03e15d2df6. PoupMoedas: 50",
+      "detail": "Token recebido. User ID: 6a3fe4529e83b2dfa434a610. PoupMoedas: 50",
       "response_snippet": ""
     },
     {
@@ -45,7 +45,7 @@
       "test": "GET /auth/me",
       "success": true,
       "http_status": 200,
-      "detail": "Nome: Maria Silva. Email: maria.silva.e2e.1782570442@example.com. Plan: free",
+      "detail": "Nome: Maria Silva. Email: maria.silva.e2e.1782572113@example.com. Plan: free",
       "response_snippet": ""
     },
     {
@@ -179,25 +179,25 @@
     {
       "section": "8. DÍVIDAS + SNOWBALL",
       "test": "Criar dívida: WiZink (2500€)",
-      "success": false,
-      "http_status": 400,
-      "detail": "{\"success\":false,\"error\":\"`ativo` is not a valid enum value for path `status`.\"}",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
       "response_snippet": ""
     },
     {
       "section": "8. DÍVIDAS + SNOWBALL",
       "test": "Criar dívida: Cartão Continente (800€)",
-      "success": false,
-      "http_status": 400,
-      "detail": "{\"success\":false,\"error\":\"`ativo` is not a valid enum value for path `status`.\"}",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
       "response_snippet": ""
     },
     {
       "section": "8. DÍVIDAS + SNOWBALL",
       "test": "Criar dívida: João (amigo) (200€)",
-      "success": false,
-      "http_status": 400,
-      "detail": "{\"success\":false,\"error\":\"`ativo` is not a valid enum value for path `status`.\"}",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
       "response_snippet": ""
     },
     {
@@ -205,7 +205,7 @@
       "test": "Listar dívidas",
       "success": true,
       "http_status": 200,
-      "detail": "Total: 0",
+      "detail": "Total: 3",
       "response_snippet": ""
     },
     {
@@ -341,7 +341,7 @@
       "test": "⚠️ BUG: earn com amount=999999 creditado (C4)",
       "success": false,
       "http_status": 200,
-      "detail": "Saldo após abuso: 1000059",
+      "detail": "Saldo após abuso: 110",
       "response_snippet": ""
     },
     {
