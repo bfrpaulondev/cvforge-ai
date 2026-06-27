@@ -1,0 +1,404 @@
+{
+  "test_run": "2026-06-27T14:28:06.883102",
+  "test_user_email": "maria.silva.e2e.1782570442@example.com",
+  "summary": {
+    "total": 49,
+    "success": 42,
+    "failed": 7,
+    "success_pct": 85.7
+  },
+  "results": [
+    {
+      "section": "1. AUTENTICAÇÃO — Registro de nova conta",
+      "test": "Registrar nova conta",
+      "success": true,
+      "http_status": 201,
+      "detail": "Token recebido. User ID: 6a3fddcb1ae2dc03e15d2df6. PoupMoedas: 50",
+      "response_snippet": ""
+    },
+    {
+      "section": "1. AUTENTICAÇÃO — Registro de nova conta",
+      "test": "Resposta inclui user object",
+      "success": true,
+      "http_status": 201,
+      "detail": "Coach: Ricardo. Modo: sobrevivencia",
+      "response_snippet": ""
+    },
+    {
+      "section": "2. AUTENTICAÇÃO — Login",
+      "test": "Login com credenciais válidas",
+      "success": true,
+      "http_status": 200,
+      "detail": "Streak: 1",
+      "response_snippet": ""
+    },
+    {
+      "section": "2. AUTENTICAÇÃO — Login",
+      "test": "Login com senha errada rejeitado",
+      "success": true,
+      "http_status": 401,
+      "detail": "Mensagem: Credenciais invalidas",
+      "response_snippet": ""
+    },
+    {
+      "section": "3. PERFIL — GET /auth/me",
+      "test": "GET /auth/me",
+      "success": true,
+      "http_status": 200,
+      "detail": "Nome: Maria Silva. Email: maria.silva.e2e.1782570442@example.com. Plan: free",
+      "response_snippet": ""
+    },
+    {
+      "section": "3. PERFIL — GET /auth/me",
+      "test": "Password NÃO é retornado no perfil",
+      "success": true,
+      "http_status": 200,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "4. ONBOARDING",
+      "test": "Completar onboarding",
+      "success": true,
+      "http_status": 200,
+      "detail": "Income: 1250",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar receita (salário 1250€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "ID: None",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar receita (freelance 250€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar despesa: Renda (550€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar despesa: Supermercado Pingo Doce (180€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar despesa: Passe Navegante (45€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar despesa: Cinema + jantar (60€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar despesa: Curso Udemy (35€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Lançar despesa: Farmácia (50€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Listar transações",
+      "success": true,
+      "http_status": 200,
+      "detail": "Total: 8",
+      "response_snippet": ""
+    },
+    {
+      "section": "5. TRANSAÇÕES — Receitas e despesas",
+      "test": "Resumo de transações",
+      "success": true,
+      "http_status": 200,
+      "detail": "Receitas: None | Despesas: None | Saldo: 580",
+      "response_snippet": ""
+    },
+    {
+      "section": "6. FRASCOS (JARS)",
+      "test": "Listar frascos",
+      "success": true,
+      "http_status": 200,
+      "detail": "Frascos: 0",
+      "response_snippet": ""
+    },
+    {
+      "section": "7. METAS (GOALS)",
+      "test": "Criar meta (Fundo Emergência 3750€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "ID: None",
+      "response_snippet": ""
+    },
+    {
+      "section": "7. METAS (GOALS)",
+      "test": "Criar meta (Viagem Porto 400€)",
+      "success": true,
+      "http_status": 201,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "7. METAS (GOALS)",
+      "test": "Listar metas",
+      "success": true,
+      "http_status": 200,
+      "detail": "Total: 2",
+      "response_snippet": ""
+    },
+    {
+      "section": "8. DÍVIDAS + SNOWBALL",
+      "test": "Criar dívida: WiZink (2500€)",
+      "success": false,
+      "http_status": 400,
+      "detail": "{\"success\":false,\"error\":\"`ativo` is not a valid enum value for path `status`.\"}",
+      "response_snippet": ""
+    },
+    {
+      "section": "8. DÍVIDAS + SNOWBALL",
+      "test": "Criar dívida: Cartão Continente (800€)",
+      "success": false,
+      "http_status": 400,
+      "detail": "{\"success\":false,\"error\":\"`ativo` is not a valid enum value for path `status`.\"}",
+      "response_snippet": ""
+    },
+    {
+      "section": "8. DÍVIDAS + SNOWBALL",
+      "test": "Criar dívida: João (amigo) (200€)",
+      "success": false,
+      "http_status": 400,
+      "detail": "{\"success\":false,\"error\":\"`ativo` is not a valid enum value for path `status`.\"}",
+      "response_snippet": ""
+    },
+    {
+      "section": "8. DÍVIDAS + SNOWBALL",
+      "test": "Listar dívidas",
+      "success": true,
+      "http_status": 200,
+      "detail": "Total: 0",
+      "response_snippet": ""
+    },
+    {
+      "section": "8. DÍVIDAS + SNOWBALL",
+      "test": "Calcular bola de neve (extraBudget=50)",
+      "success": true,
+      "http_status": 200,
+      "detail": "Meses: None",
+      "response_snippet": ""
+    },
+    {
+      "section": "8. DÍVIDAS + SNOWBALL",
+      "test": "Calcular bola de neve detalhada",
+      "success": false,
+      "http_status": 404,
+      "detail": "Timeline: ? eventos",
+      "response_snippet": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/debts/snowball-detailed</pre>\n</body>\n</html>\n"
+    },
+    {
+      "section": "9. INVESTIMENTOS",
+      "test": "Criar investimento: Fundo S&P 500 (500€)",
+      "success": false,
+      "http_status": 403,
+      "detail": "{\"success\":false,\"error\":\"Funcionalidade exclusiva Premium. Atualiza a tua conta.\"}",
+      "response_snippet": ""
+    },
+    {
+      "section": "9. INVESTIMENTOS",
+      "test": "Criar investimento: Cripto BTC (200€)",
+      "success": false,
+      "http_status": 403,
+      "detail": "{\"success\":false,\"error\":\"Funcionalidade exclusiva Premium. Atualiza a tua conta.\"}",
+      "response_snippet": ""
+    },
+    {
+      "section": "9. INVESTIMENTOS",
+      "test": "Listar investimentos",
+      "success": true,
+      "http_status": 200,
+      "detail": "Total: 0",
+      "response_snippet": ""
+    },
+    {
+      "section": "10. COACH AI — Chat",
+      "test": "Coach: enviar mensagem inicial",
+      "success": true,
+      "http_status": 200,
+      "detail": "Resposta: verificar",
+      "response_snippet": ""
+    },
+    {
+      "section": "10. COACH AI — Chat",
+      "test": "Coach: enviar follow-up",
+      "success": true,
+      "http_status": 200,
+      "detail": "Resposta recebida: False",
+      "response_snippet": ""
+    },
+    {
+      "section": "10. COACH AI — Chat",
+      "test": "Coach: carregar histórico",
+      "success": true,
+      "http_status": 200,
+      "detail": "Mensagens: 4",
+      "response_snippet": ""
+    },
+    {
+      "section": "11. NOTIFICAÇÕES",
+      "test": "Listar notificações",
+      "success": true,
+      "http_status": 200,
+      "detail": "Total: 0",
+      "response_snippet": ""
+    },
+    {
+      "section": "11. NOTIFICAÇÕES",
+      "test": "Marcar todas como lidas",
+      "success": true,
+      "http_status": 200,
+      "detail": "",
+      "response_snippet": ""
+    },
+    {
+      "section": "12. RELATÓRIOS",
+      "test": "Reports: sumário geral",
+      "success": true,
+      "http_status": 200,
+      "detail": "Dados: True",
+      "response_snippet": ""
+    },
+    {
+      "section": "12. RELATÓRIOS",
+      "test": "Reports: mensal (6/2026)",
+      "success": true,
+      "http_status": 200,
+      "detail": "Dados: True",
+      "response_snippet": ""
+    },
+    {
+      "section": "12. RELATÓRIOS",
+      "test": "Reports: progresso de dívidas",
+      "success": true,
+      "http_status": 200,
+      "detail": "Dados: True",
+      "response_snippet": ""
+    },
+    {
+      "section": "13. POUPMOEDAS",
+      "test": "PoupMoedas: obter saldo",
+      "success": true,
+      "http_status": 200,
+      "detail": "Saldo: 50",
+      "response_snippet": ""
+    },
+    {
+      "section": "13. POUPMOEDAS",
+      "test": "PoupMoedas: ganhar (daily_login)",
+      "success": true,
+      "http_status": 200,
+      "detail": "Novo saldo: 60",
+      "response_snippet": ""
+    },
+    {
+      "section": "13. POUPMOEDAS",
+      "test": "PoupMoedas: ação inválida rejeitada",
+      "success": true,
+      "http_status": 400,
+      "detail": "Mensagem: Acao invalida",
+      "response_snippet": ""
+    },
+    {
+      "section": "13. POUPMOEDAS",
+      "test": "⚠️ BUG: earn com amount=999999 creditado (C4)",
+      "success": false,
+      "http_status": 200,
+      "detail": "Saldo após abuso: 1000059",
+      "response_snippet": ""
+    },
+    {
+      "section": "14. DETEÇÃO DE MODO",
+      "test": "Detectar modo financeiro",
+      "success": true,
+      "http_status": 200,
+      "detail": "Modo: None",
+      "response_snippet": ""
+    },
+    {
+      "section": "15. PERFIL — Atualizar preferências",
+      "test": "Atualizar perfil",
+      "success": true,
+      "http_status": 200,
+      "detail": "Nome: Maria Silva Lopes",
+      "response_snippet": ""
+    },
+    {
+      "section": "15. PERFIL — Atualizar preferências",
+      "test": "Atualizar modo financeiro manual",
+      "success": true,
+      "http_status": 200,
+      "detail": "Modo: recuperacao",
+      "response_snippet": ""
+    },
+    {
+      "section": "15. PERFIL — Atualizar preferências",
+      "test": "Atualizar preferências do coach",
+      "success": true,
+      "http_status": 200,
+      "detail": "Coach: Ricardão",
+      "response_snippet": ""
+    },
+    {
+      "section": "17. SEGURANÇA — Validação de autorização",
+      "test": "GET /transactions sem token rejeitado",
+      "success": true,
+      "http_status": 401,
+      "detail": "Mensagem: Nao autenticado. Faz login para continuar.",
+      "response_snippet": ""
+    },
+    {
+      "section": "17. SEGURANÇA — Validação de autorização",
+      "test": "GET /auth/me com token inválido rejeitado",
+      "success": true,
+      "http_status": 401,
+      "detail": "Mensagem: Sessao invalida. Faz login novamente.",
+      "response_snippet": ""
+    },
+    {
+      "section": "18. LOGOUT",
+      "test": "Logout",
+      "success": true,
+      "http_status": 200,
+      "detail": "Mensagem: Sessao terminada",
+      "response_snippet": ""
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+
+[1m[96m======================================================================[0m
+[1m[96m  1. AUTENTICAÇÃO — Registro de nova conta[0m
+[1m[96m======================================================================[0m
+   Email: maria.silva.e2e.1782570442@example.com
+[92m✓ Registrar nova conta [HTTP 201][0m
+   Token recebido. User ID: 6a3fddcb1ae2dc03e15d2df6. PoupMoedas: 50
+[92m✓ Resposta inclui user object [HTTP 201][0m
+   Coach: Ricardo. Modo: sobrevivencia
+
+[1m[96m======================================================================[0m
+[1m[96m  2. AUTENTICAÇÃO — Login[0m
+[1m[96m======================================================================[0m
+[92m✓ Login com credenciais válidas [HTTP 200][0m
+   Streak: 1
+[92m✓ Login com senha errada rejeitado [HTTP 401][0m
+   Mensagem: Credenciais invalidas
+
+[1m[96m======================================================================[0m
+[1m[96m  3. PERFIL — GET /auth/me[0m
+[1m[96m======================================================================[0m
+[92m✓ GET /auth/me [HTTP 200][0m
+   Nome: Maria Silva. Email: maria.silva.e2e.1782570442@example.com. Plan: free
+[92m✓ Password NÃO é retornado no perfil [HTTP 200][0m
+
+[1m[96m======================================================================[0m
+[1m[96m  4. ONBOARDING[0m
+[1m[96m======================================================================[0m
+[92m✓ Completar onboarding [HTTP 200][0m
+   Income: 1250
+
+[1m[96m======================================================================[0m
+[1m[96m  5. TRANSAÇÕES — Receitas e despesas[0m
+[1m[96m======================================================================[0m
+[92m✓ Lançar receita (salário 1250€) [HTTP 201][0m
+   ID: None
+[92m✓ Lançar receita (freelance 250€) [HTTP 201][0m
+[92m✓ Lançar despesa: Renda (550€) [HTTP 201][0m
+[92m✓ Lançar despesa: Supermercado Pingo Doce (180€) [HTTP 201][0m
+[92m✓ Lançar despesa: Passe Navegante (45€) [HTTP 201][0m
+[92m✓ Lançar despesa: Cinema + jantar (60€) [HTTP 201][0m
+[92m✓ Lançar despesa: Curso Udemy (35€) [HTTP 201][0m
+[92m✓ Lançar despesa: Farmácia (50€) [HTTP 201][0m
+[92m✓ Listar transações [HTTP 200][0m
+   Total: 8
+[92m✓ Resumo de transações [HTTP 200][0m
+   Receitas: None | Despesas: None | Saldo: 580
+
+[1m[96m======================================================================[0m
+[1m[96m  6. FRASCOS (JARS)[0m
+[1m[96m======================================================================[0m
+[92m✓ Listar frascos [HTTP 200][0m
+   Frascos: 0
+
+[1m[96m======================================================================[0m
+[1m[96m  7. METAS (GOALS)[0m
+[1m[96m======================================================================[0m
+[92m✓ Criar meta (Fundo Emergência 3750€) [HTTP 201][0m
+   ID: None
+[92m✓ Criar meta (Viagem Porto 400€) [HTTP 201][0m
+[92m✓ Listar metas [HTTP 200][0m
+   Total: 2
+
+[1m[96m======================================================================[0m
+[1m[96m  8. DÍVIDAS + SNOWBALL[0m
+[1m[96m======================================================================[0m
+[91m✗ Criar dívida: WiZink (2500€) [HTTP 400][0m
+   {"success":false,"error":"`ativo` is not a valid enum value for path `status`."}
+[91m✗ Criar dívida: Cartão Continente (800€) [HTTP 400][0m
+   {"success":false,"error":"`ativo` is not a valid enum value for path `status`."}
+[91m✗ Criar dívida: João (amigo) (200€) [HTTP 400][0m
+   {"success":false,"error":"`ativo` is not a valid enum value for path `status`."}
+[92m✓ Listar dívidas [HTTP 200][0m
+   Total: 0
+[92m✓ Calcular bola de neve (extraBudget=50) [HTTP 200][0m
+   Meses: None
+[91m✗ Calcular bola de neve detalhada [HTTP 404][0m
+   Timeline: ? eventos
+   → Resposta: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /api/debts/snowball-detailed</pre>
+</body>
+</html>
+
+
+[1m[96m======================================================================[0m
+[1m[96m  9. INVESTIMENTOS[0m
+[1m[96m======================================================================[0m
+[91m✗ Criar investimento: Fundo S&P 500 (500€) [HTTP 403][0m
+   {"success":false,"error":"Funcionalidade exclusiva Premium. Atualiza a tua conta."}
+[91m✗ Criar investimento: Cripto BTC (200€) [HTTP 403][0m
+   {"success":false,"error":"Funcionalidade exclusiva Premium. Atualiza a tua conta."}
+[92m✓ Listar investimentos [HTTP 200][0m
+   Total: 0
+
+[1m[96m======================================================================[0m
+[1m[96m  10. COACH AI — Chat[0m
+[1m[96m======================================================================[0m
+[92m✓ Coach: enviar mensagem inicial [HTTP 200][0m
+   Resposta: verificar
+[92m✓ Coach: enviar follow-up [HTTP 200][0m
+   Resposta recebida: False
+[92m✓ Coach: carregar histórico [HTTP 200][0m
+   Mensagens: 4
+
+[1m[96m======================================================================[0m
+[1m[96m  11. NOTIFICAÇÕES[0m
+[1m[96m======================================================================[0m
+[92m✓ Listar notificações [HTTP 200][0m
+   Total: 0
+[92m✓ Marcar todas como lidas [HTTP 200][0m
+
+[1m[96m======================================================================[0m
+[1m[96m  12. RELATÓRIOS[0m
+[1m[96m======================================================================[0m
+[92m✓ Reports: sumário geral [HTTP 200][0m
+   Dados: True
+[92m✓ Reports: mensal (6/2026) [HTTP 200][0m
+   Dados: True
+[92m✓ Reports: progresso de dívidas [HTTP 200][0m
+   Dados: True
+
+[1m[96m======================================================================[0m
+[1m[96m  13. POUPMOEDAS[0m
+[1m[96m======================================================================[0m
+[92m✓ PoupMoedas: obter saldo [HTTP 200][0m
+   Saldo: 50
+[92m✓ PoupMoedas: ganhar (daily_login) [HTTP 200][0m
+   Novo saldo: 60
+[92m✓ PoupMoedas: ação inválida rejeitada [HTTP 400][0m
+   Mensagem: Acao invalida
+[91m✗ ⚠️ BUG: earn com amount=999999 creditado (C4) [HTTP 200][0m
+   Saldo após abuso: 1000059
+
+[1m[96m======================================================================[0m
+[1m[96m  14. DETEÇÃO DE MODO[0m
+[1m[96m======================================================================[0m
+[92m✓ Detectar modo financeiro [HTTP 200][0m
+   Modo: None
+
+[1m[96m======================================================================[0m
+[1m[96m  15. PERFIL — Atualizar preferências[0m
+[1m[96m======================================================================[0m
+[92m✓ Atualizar perfil [HTTP 200][0m
+   Nome: Maria Silva Lopes
+[92m✓ Atualizar modo financeiro manual [HTTP 200][0m
+   Modo: recuperacao
+[92m✓ Atualizar preferências do coach [HTTP 200][0m
+   Coach: Ricardão
+
+[1m[96m======================================================================[0m
+[1m[96m  16. CRUD — Editar e excluir[0m
+[1m[96m======================================================================[0m
+
+[1m[96m======================================================================[0m
+[1m[96m  17. SEGURANÇA — Validação de autorização[0m
+[1m[96m======================================================================[0m
+[92m✓ GET /transactions sem token rejeitado [HTTP 401][0m
+   Mensagem: Nao autenticado. Faz login para continuar.
+[92m✓ GET /auth/me com token inválido rejeitado [HTTP 401][0m
+   Mensagem: Sessao invalida. Faz login novamente.
+
+[1m[96m======================================================================[0m
+[1m[96m  18. LOGOUT[0m
+[1m[96m======================================================================[0m
+[92m✓ Logout [HTTP 200][0m
+   Mensagem: Sessao terminada
+
+[1m[96m======================================================================[0m
+[1m[96m  RESUMO DO DOSSIÊ DE TESTES[0m
+[1m[96m======================================================================[0m
+
+[1mTotal de testes: 49[0m
+[92mSucessos: 42[0m
+[91mFalhas: 7[0m
+[93mTaxa de sucesso: 85.7%[0m
+
+Relatório JSON salvo em: /home/z/my-project/download/test-report.json
