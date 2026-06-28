@@ -131,3 +131,55 @@ Stage Summary:
 - curl http://localhost:3000/ → HTTP 200, dev.log "Compiled in 186ms" with no errors
 - Page renders with CVForge brand, hero title, builder, and all expected markers
 - Agent work record written to /home/z/my-project/agent-ctx/CVForge-MainPage-frontend-engineer.md
+
+---
+Task ID: CVForge-V2
+Agent: Frontend Engineer (main)
+Task: Rebuild CVForge AI landing page from scratch — colorful modern design (Intercom/Framer style) with 3-step wizard builder
+
+Work Log:
+- Read worklog.md (context from CVForge-MainPage), src/lib/i18n.ts (all translation keys), src/hooks/use-file-upload.ts (upload hook API), src/app/api/optimize-cv/route.ts, src/app/api/import-linkedin/route.ts, layout.tsx, globals.css, button.tsx, card.tsx, tabs.tsx, accordion.tsx, progress.tsx, badge.tsx, package.json (confirmed framer-motion available)
+- Initialized fullstack env (existing project, skipped)
+- Updated src/app/globals.css:
+  * Switched :root primary from emerald-green to vibrant violet (oklch 0.55 0.24 295), radius 0.75rem, soft violet-tinted backgrounds
+  * Added gradient-text-cv (purple→pink→orange), gradient-text-ocean (blue→cyan), gradient-text-emerald utilities
+  * Glass-card now light (white 70% + blur), added glow-purple/pink/cyan/soft shadows
+  * Light grid-bg with radial mask, .blob class for animated gradient blobs
+  * Keyframes: blob, float, float-slow, shimmer, gradient-shift, pulse-ring, marquee + matching .animate-* utilities
+  * Custom gradient scrollbar, .gradient-border card, shimmer skeleton
+  * Did NOT add .dark class anywhere — strictly bright/light theme
+- Wrote complete src/app/page.tsx (~1300 lines, 'use client') with ALL 14 sections in order:
+  1. Sticky Navbar — Logo (animated hammer + ping dot), nav links, language dropdown (flags), gradient "Build CV" CTA, mobile hamburger w/ animated menu, scroll-aware background blur
+  2. Hero — animated gradient blobs (violet/fuchsia/cyan) + grid overlay, gradient headline w/ animated gradient text, dual CTAs, LIVE COUNTER (AnimatedCounter 0→12,847 easeOutCubic, triggered on view), 3-stat row, trust badges
+  3. Video Demo — 16:9 gradient placeholder w/ animated ping + play button, gradient-border frame
+  4. How It Works — 3 numbered cards (Upload→Choose→Download) w/ gradient icon tiles + oversized step numbers
+  5. CV Builder Wizard — the core feature:
+     * Step indicator (3 circles w/ check/active/done states + Progress bar + "Step X of 3")
+     * Step 1: Tabs (Paste CV / Upload File / LinkedIn) — textarea, drag-drop upload zone, LinkedIn URL import; char counter; min-30 validation; editable preview of imported CV; optional job description; Next button
+     * Step 2: 6 template cards w/ mini visual TemplatePreview (per-template CSS mockups) + language Select (auto-detect + 6 locales w/ flags) + Back/Optimize buttons
+     * Step 3: AtsScoreRing (animated SVG circular progress w/ gradient stroke, color-coded by score), optimized CV in styled scrollable card (custom-scroll), suggestions list, Copy button (working clipboard), Download PDF button (locked w/ €4.99 badge + tooltip), Start Over button; auto-scroll to result on completion
+     * AnimatePresence transitions between steps (slide x), loading state w/ spinner "Forging your CV..."
+  6. Templates Showcase — 6 cards w/ gradient header + floating mini-preview + emoji + tag badge + "Use this template" CTA
+  7. Features — 6 cards (ATS, Cover Letter, LinkedIn, Multi-language, PDF, Interview) w/ gradient icon tiles + hover lift
+  8. Testimonials — 3 cards w/ gradient avatar circles (initials), 5-star rating, quote, role; corner gradient accent
+  9. Comparison Table — CVForge vs Rezi vs Zety vs Canva, styled table, CVForge column highlighted, gradient header, CTA footer
+  10. Pricing — Free (€0) + Pro (€4.99/CV) cards; Pro card w/ gradient bg, "Best Value" crown badge, 6 features w/ checkmarks, 30-day guarantee
+  11. FAQ — 8 questions in Accordion (shadcn), clean card
+  12. Blog/SEO Teaser — 3 article cards w/ gradient headers, tag badges, read time, "Read more"
+  13. Final CTA — big gradient banner (violet→fuchsia→pink) w/ blobs, headline, dual buttons, trust badges
+  14. Footer — Logo + tagline, 4 social icons, 3 link columns (Product/Company/Legal), copyright w/ heart, mt-auto sticky-bottom
+- Wizard state exactly as specified: wizardStep (1|2|3), cv, jobDescription, selectedTemplate ('ats'), selectedLanguage ('auto'), isOptimizing, result (OptimizeResult|null)
+- API integration: POST /api/optimize-cv {cv, jobDescription, template, language} → {success, optimizedCV, atsScore, suggestions, template}; POST /api/import-linkedin {url} → {cvText}; useFileUpload hook for PDF/DOCX/TXT parsing
+- i18n: browser language detection on mount (navigator.language → LOCALES match → fallback 'en'), all text via t(locale, key), navbar language dropdown updates locale live
+- Root wrapper: min-h-screen flex flex-col, footer mt-auto (sticky bottom)
+- shadcn/ui used: Button, Card/CardContent, Input, Textarea, Select, Badge, Tabs, Accordion, Progress, DropdownMenu, Tooltip; framer-motion for Reveal (whileInView fade-up), AnimatePresence step transitions, motion.circle ATS ring animation, useInView for counter trigger
+- Responsive: mobile-first throughout, grids stack → sm:2 → lg:3, mobile hamburger menu, table horizontal scroll
+- Colorful modern (Intercom/Framer): purple-pink + blue-cyan gradients (explicitly requested), bright white bg, soft pastel section backgrounds (violet-50/fuchsia-50), rounded-2xl/3xl cards, soft shadows + glow
+- Fixed transient error: initially forgot to import Clock icon (used in blog read-time); added to imports — page now returns 200 cleanly
+
+Stage Summary:
+- bun run lint → exit code 0, 0 errors, 0 warnings
+- curl http://localhost:3000/ → HTTP 200 (150KB HTML), all key markers present (CVForge, ATS, "Ready to forge")
+- dev.log: "GET / 200 in 366ms" latest, no errors after Clock import fix
+- Page renders bright/colorful light theme with all 14 sections + fully functional 3-step wizard
+- Agent work record written to /home/z/my-project/agent-ctx/CVForge-V2-frontend-engineer.md

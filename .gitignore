@@ -64,3 +64,4 @@ worklog.md
 repos/
 download/
 scripts/
+.env*
