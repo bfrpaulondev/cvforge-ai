@@ -571,6 +571,9 @@ export default function CVForgePage() {
   );
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [linkedinLoading, setLinkedinLoading] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [accessPassword, setAccessPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const { processFile, isProcessing, error: uploadError } = useFileUpload();
   const { toast } = useToast();
@@ -1578,32 +1581,76 @@ export default function CVForgePage() {
 
                             {/* Actions */}
                             <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
+                              {/* Se não desbloqueado, mostrar campo de senha */}
+                              {!isUnlocked ? (
+                                <div className="flex flex-col gap-2 w-full">
+                                  <div className="flex gap-2">
+                                    <Input
+                                      type="password"
+                                      placeholder="Enter access password"
+                                      value={accessPassword}
+                                      onChange={(e) => {
+                                        setAccessPassword(e.target.value);
+                                        setPasswordError("");
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter" && accessPassword.trim()) {
+                                          if (accessPassword.trim() === "cvforge2026") {
+                                            setIsUnlocked(true);
+                                            setPasswordError("");
+                                            toast({ title: "✅ Access granted!", description: "You can now download and preview CVs." });
+                                          } else {
+                                            setPasswordError("Wrong password. Try again.");
+                                          }
+                                        }
+                                      }}
+                                      className="flex-1 border-violet-200 focus:border-violet-500"
+                                    />
                                     <Button
-                                      className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white shadow-md hover:shadow-lg"
-                                      onClick={() =>
-                                        toast({
-                                          title: "🔒 PDF download",
-                                          description:
-                                            "Unlock print-ready PDF export for €4.99 (one-time, per CV).",
-                                        })
-                                      }
+                                      className="bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white"
+                                      onClick={() => {
+                                        if (accessPassword.trim() === "cvforge2026") {
+                                          setIsUnlocked(true);
+                                          setPasswordError("");
+                                          toast({ title: "✅ Access granted!", description: "You can now download and preview CVs." });
+                                        } else {
+                                          setPasswordError("Wrong password. Try again.");
+                                        }
+                                      }}
                                     >
-                                      <FileDown className="size-4" />
-                                      {t(locale, "builder.download")}
-                                      <Badge className="ml-1 bg-white/25 text-white">
-                                        <Euro className="size-3" /> 4.99
-                                      </Badge>
+                                      <Lock className="size-4" />
+                                      Unlock
                                     </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    One-time €4.99 — print-ready PDF with
-                                    embedded fonts
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                                  </div>
+                                  {passwordError && (
+                                    <p className="text-xs text-red-500">{passwordError}</p>
+                                  )}
+                                  <p className="text-xs text-slate-400">
+                                    🔒 Enter the access password to unlock PDF download and preview.
+                                  </p>
+                                </div>
+                              ) : (
+                                /* Se desbloqueado, mostrar botão de download funcional */
+                                <Button
+                                  className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white shadow-md hover:shadow-lg"
+                                  onClick={() => {
+                                    if (result?.optimizedCV) {
+                                      // Criar PDF simples via window.print ou download de texto
+                                      const blob = new Blob([result.optimizedCV], { type: "text/plain" });
+                                      const url = URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.href = url;
+                                      a.download = `CV_Optimized_${template}_${Date.now()}.txt`;
+                                      a.click();
+                                      URL.revokeObjectURL(url);
+                                      toast({ title: "✅ CV downloaded!", description: "Your optimized CV has been downloaded." });
+                                    }
+                                  }}
+                                >
+                                  <FileDown className="size-4" />
+                                  {t(locale, "builder.download")}
+                                </Button>
+                              )}
 
                               <Button
                                 onClick={handleCopy}
