@@ -285,6 +285,13 @@ export default function Home() {
         title: 'CV forged successfully',
         description: 'Your optimized CV is ready to review.',
       })
+      // Scroll automático para o resultado (mobile-friendly)
+      setTimeout(() => {
+        const resultEl = document.getElementById('cv-result')
+        if (resultEl) {
+          resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
     } catch (e: any) {
       setError(e?.message ?? 'Failed to optimize CV. Please try again.')
       toast({
@@ -813,7 +820,7 @@ export default function Home() {
 
               {/* ---------- RIGHT (40%) ---------- */}
               <div className="lg:col-span-2">
-                <div className="sticky top-20">
+                <div id="cv-result" className="sticky top-20 scroll-mt-20">
                   <Card className="glass-card min-h-[500px]">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                       <CardTitle className="text-base">{t(locale, 'builder.result')}</CardTitle>
