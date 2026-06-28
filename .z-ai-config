@@ -1,0 +1,5 @@
+{
+  "api_key": "zai-5b2e8d3f9c1a4b6e8d2f0c5a7b9e3d1f",
+  "api_base_url": "https://api.z.ai/api/paas/v4",
+  "model": "glm-4.6"
+}

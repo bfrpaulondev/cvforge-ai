@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Lazy init OpenAI - só cria quando a route é chamada (evita erro no build)
+// Lazy init OpenAI — só cria quando chamado
 let _openai: any = null;
 const getOpenAI = () => {
   if (!_openai) {
     const OpenAI = require("openai").default;
-    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const key = process.env.OPENAI_API_KEY;
+    if (!key) {
+      throw new Error("OPENAI_API_KEY environment variable is not set. Please add it in Vercel project settings.");
+    }
+    _openai = new OpenAI({ apiKey: key });
   }
   return _openai;
 };
@@ -105,7 +109,7 @@ SUGGESTIONS:
   } catch (error: any) {
     console.error("CV optimization error:", error.message);
     return NextResponse.json(
-      { error: "Failed to optimize CV. Please try again." },
+      { error: error.message || "Failed to optimize CV." },
       { status: 500 }
     );
   }
