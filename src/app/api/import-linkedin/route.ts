@@ -8,15 +8,37 @@ export async function POST(req: NextRequest) {
   try {
     const { url } = await req.json();
 
-    if (!url || !url.includes("linkedin.com")) {
+    if (!url) {
       return NextResponse.json(
-        { error: "Please provide a valid LinkedIn profile URL" },
+        { error: "Please provide a LinkedIn profile URL" },
         { status: 400 }
       );
     }
 
-    // Normalizar URL
-    const profileUrl = url.trim();
+    // Normalizar URL: adicionar https:// se não tiver, e converter para lowercase no domínio
+    let profileUrl = url.trim();
+    
+    // Se não tem protocolo, adicionar
+    if (!profileUrl.startsWith("http://") && !profileUrl.startsWith("https://")) {
+      profileUrl = "https://" + profileUrl;
+    }
+    
+    // Converter domínio para lowercase (mas manter o path como está)
+    try {
+      const urlObj = new URL(profileUrl);
+      profileUrl = urlObj.href;
+    } catch {
+      // Se falhar o parse, tentar com lowercase
+      profileUrl = profileUrl.toLowerCase();
+    }
+    
+    // Validação case-insensitive
+    if (!profileUrl.toLowerCase().includes("linkedin.com")) {
+      return NextResponse.json(
+        { error: "Please provide a valid LinkedIn profile URL (e.g., https://www.linkedin.com/in/your-name)" },
+        { status: 400 }
+      );
+    }
 
     // Fazer fetch da página do LinkedIn com headers de browser
     const fetchRes = await fetch(profileUrl, {

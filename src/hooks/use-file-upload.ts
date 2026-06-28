@@ -64,13 +64,12 @@ export function useFileUpload() {
 
 async function parsePDF(file: File): Promise<string> {
   try {
-    // Configurar worker do pdfjs
-    const pdfjs = await import("pdfjs-dist/build/pdf.mjs");
-
-    // Configurar worker URL
-    const workerSrc = await import("pdfjs-dist/build/pdf.worker.mjs");
-    pdfjs.GlobalWorkerOptions.workerSrc = workerSrc.default;
-
+    // Configurar worker via CDN (mais compatível com Vercel/serverless)
+    const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+    
+    // Usar CDN worker URL (funciona em qualquer ambiente)
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+    
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
 
@@ -87,7 +86,32 @@ async function parsePDF(file: File): Promise<string> {
 
     return fullText;
   } catch (err: any) {
-    throw new Error(`Failed to parse PDF: ${err.message}`);
+    // Fallback: tentar sem worker (main thread)
+    try {
+      const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
+      pdfjs.GlobalWorkerOptions.workerSrc = "";
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjs.getDocument({ 
+        data: arrayBuffer,
+        useWorkerFetch: false,
+        isEvalSupported: false,
+        useSystemFonts: true,
+      }).promise;
+
+      let fullText = "";
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + "\n\n";
+      }
+      return fullText;
+    } catch (err2: any) {
+      throw new Error(`Failed to parse PDF: ${err2.message}. Try saving as .docx or .txt instead.`);
+    }
   }
 }
 
