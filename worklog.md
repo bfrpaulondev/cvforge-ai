@@ -108,3 +108,26 @@ Stage Summary:
 - Prioridade #1: URLs de API inconsistentes entre api.js e Settings.jsx (causa bug real: delete account quebrado)
 - Prioridade #2: JWT sem expiração em produção (render.yaml com nome errado de env var)
 - Prioridade #3: Credenciais admin hardcoded em script versionado (backdoor)
+
+---
+Task ID: CVForge-MainPage
+Agent: Frontend Engineer (main)
+Task: Build CVForge AI main page (single-page SaaS landing + CV builder)
+
+Work Log:
+- Read worklog.md, existing page.tsx (placeholder), layout.tsx, package.json, i18n.ts, optimize-cv/route.ts, globals.css, button.tsx
+- Wrote complete src/app/page.tsx (~720 lines, 'use client') with all 7 sections: sticky navbar, hero with grid-bg + glow, CV builder (the core feature), features grid, templates showcase with mini visual previews, pricing (Free + Pro), footer with mt-auto
+- State: locale, cv, jobDescription, selectedTemplate (default 'ats'), selectedLanguage (default 'auto'), isOptimizing, result, error, mobileMenuOpen, copied
+- Builder fully functional: POST to /api/optimize-cv, 4 states (empty/loading/result/error), ATS score badge, scrollable monospace CV, suggestions list, working clipboard copy, disabled PDF button with €4.99 tooltip
+- Added useEffect to set .dark class on documentElement (layout.tsx didn't set it)
+- All user-facing text via t(locale, key) — 6 locales (en, pt-BR, pt-PT, es, fr, de)
+- Used shadcn/ui: Button, Card, Textarea, Select, Badge, Skeleton, ScrollArea, DropdownMenu, Tooltip
+- Lucide icons: Hammer, FileText, ShieldCheck, Mail, Linkedin, Globe, FileDown, MessageSquare, Check, Copy, Download, Sparkles, Loader2, ChevronDown, Star, Zap, GraduationCap, Code2, Briefcase, Languages, Lock, RefreshCw, Globe2, Menu, X, ArrowRight
+- Responsive: mobile-first, stack on mobile, side-by-side on lg:, mobile hamburger menu
+- Premium dark aesthetic (Linear/Stripe-like): glass-card, glow on CTAs, gradient-text on hero accent, grid-bg with radial mask, emerald accent
+
+Stage Summary:
+- bunx eslint src/app/page.tsx → 0 errors, 0 warnings (the 168 lint errors in /repos/ are unrelated old Node.js reference repos, not this project)
+- curl http://localhost:3000/ → HTTP 200, dev.log "Compiled in 186ms" with no errors
+- Page renders with CVForge brand, hero title, builder, and all expected markers
+- Agent work record written to /home/z/my-project/agent-ctx/CVForge-MainPage-frontend-engineer.md
