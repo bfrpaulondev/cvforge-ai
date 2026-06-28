@@ -55,8 +55,19 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
+import { useFileUpload } from '@/hooks/use-file-upload'
 import { t, LOCALES, type Locale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Upload, Link2, AlertCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 // ---------- Types ----------
 
@@ -218,6 +229,11 @@ export default function Home() {
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [result, setResult] = useState<OptimizeResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showLinkedInModal, setShowLinkedInModal] = useState(false)
+  const [linkedinUrl, setLinkedinUrl] = useState('')
+  const [isImportingLinkedIn, setIsImportingLinkedIn] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { processFile, isProcessing: isUploading, error: uploadError, setError: setUploadError } = useFileUpload()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const builderRef = useRef<HTMLDivElement | null>(null)
@@ -529,9 +545,54 @@ export default function Home() {
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-base">{t(locale, 'builder.cvLabel')}</CardTitle>
-                      <span className={cn('text-xs', cv.length < 50 ? 'text-muted-foreground' : 'text-primary')}>
-                        {cv.length} chars
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {/* Upload button */}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".pdf,.docx,.txt"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            try {
+                              const text = await processFile(file)
+                              setCv(text)
+                              toast({ title: 'CV uploaded successfully!', description: `${text.length} characters extracted from ${file.name}` })
+                            } catch (err: any) {
+                              toast({ title: 'Upload failed', description: err.message, variant: 'destructive' })
+                            }
+                            // Reset input
+                            if (fileInputRef.current) fileInputRef.current.value = ''
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                        >
+                          {isUploading ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Processing...</>
+                          ) : (
+                            <><Upload className="h-3.5 w-3.5" /> Upload CV</>
+                          )}
+                        </Button>
+                        {/* LinkedIn import button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => setShowLinkedInModal(true)}
+                          disabled={isImportingLinkedIn}
+                        >
+                          <Linkedin className="h-3.5 w-3.5" /> LinkedIn
+                        </Button>
+                        <span className={cn('text-xs', cv.length < 50 ? 'text-muted-foreground' : 'text-primary')}>
+                          {cv.length} chars
+                        </span>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -543,6 +604,85 @@ export default function Home() {
                     />
                   </CardContent>
                 </Card>
+
+                {/* LinkedIn Import Modal */}
+                <Dialog open={showLinkedInModal} onOpenChange={setShowLinkedInModal}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <Linkedin className="h-5 w-5 text-primary" />
+                        Import from LinkedIn
+                      </DialogTitle>
+                      <DialogDescription>
+                        Paste your LinkedIn profile URL below. We'll extract your experience, education, and skills automatically.
+                        <br /><br />
+                        <span className="text-xs text-muted-foreground">
+                          ⚠️ Your LinkedIn profile must be public for this to work. If it's private, you can export your LinkedIn data as PDF and use the "Upload CV" button instead.
+                        </span>
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <Input
+                        placeholder="https://www.linkedin.com/in/your-profile/"
+                        value={linkedinUrl}
+                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowLinkedInModal(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          if (!linkedinUrl.trim()) return
+                          setIsImportingLinkedIn(true)
+                          try {
+                            const res = await fetch('/api/import-linkedin', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ url: linkedinUrl }),
+                            })
+                            const data = await res.json()
+                            if (data.success) {
+                              setCv(data.cvText)
+                              toast({
+                                title: 'LinkedIn profile imported!',
+                                description: `Extracted: ${data.profile.name || 'Profile'} with ${data.profile.experience?.length || 0} experiences`,
+                              })
+                              setShowLinkedInModal(false)
+                              setLinkedinUrl('')
+                            } else {
+                              toast({
+                                title: 'Import failed',
+                                description: data.error || 'Could not import LinkedIn profile',
+                                variant: 'destructive',
+                              })
+                            }
+                          } catch (err: any) {
+                            toast({
+                              title: 'Import failed',
+                              description: err.message,
+                              variant: 'destructive',
+                            })
+                          } finally {
+                            setIsImportingLinkedIn(false)
+                          }
+                        }}
+                        disabled={isImportingLinkedIn || !linkedinUrl.trim()}
+                      >
+                        {isImportingLinkedIn ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" /> Importing...</>
+                        ) : (
+                          <><Linkedin className="h-4 w-4" /> Import Profile</>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Job description */}
                 <Card className="glass-card">
