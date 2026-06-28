@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy init OpenAI - só cria quando a route é chamada (evita erro no build)
+let _openai: any = null;
+const getOpenAI = () => {
+  if (!_openai) {
+    const OpenAI = require("openai").default;
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,7 +70,7 @@ SUGGESTIONS:
       ? `## CURRENT CV:\n${cv}\n\n## TARGET JOB DESCRIPTION:\n${jobDescription}\n\n## TEMPLATE: ${template}\n\nPlease optimize this CV for the target role.`
       : `## CURRENT CV:\n${cv}\n\n## TEMPLATE: ${template}\n\nPlease optimize this CV for general professional appeal.`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
